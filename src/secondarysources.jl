@@ -1,10 +1,9 @@
 # define secondary source type
 # ensure that it is a nx7 matrix
-type SecondarySources
+immutable SecondarySources
     positions::Array{Float64,2}
     directions::Array{Float64,2}
     weights::Vector{Float64}
-    # FIXME: make constructor work with new x0 definition
     SecondarySources(x0::Array) = size(x0,2)!=7 ? error("SecondarySources has to have 7 columns") : new(x0[:,1:3],x0[:,4:6],x0[:,7])
     SecondarySources(positions::Array,directions::Array,weights::Vector) = new(positions,directions,weights)
 end
