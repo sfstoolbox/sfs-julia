@@ -1,9 +1,9 @@
-# one idea is to define SecondarySources as a subtype of Matrix and say that it
-# has to be n x 7
+# define secondary source type
+# ensure that it is a nx7 matrix
 type SecondarySources
-    x0::Array{Float64,2}
+    x0::Array{Number,2}
 
-    SecondarySources(x0::Array{Float64,2}) = size(x0,2)!=7 ? error("SecondarySource has to have 7 columns") : new(x0)
+    SecondarySources(x0::Array{Number,2}) = size(x0,2)!=7 ? error("SecondarySources has to have 7 columns") : new(x0)
 end
 
 
