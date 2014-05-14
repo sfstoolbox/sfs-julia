@@ -7,6 +7,54 @@ immutable SecondarySources
     SecondarySources(x0::Array) = size(x0,2)!=7 ? error("SecondarySources has to have 7 columns") : new(x0[:,1:3],x0[:,4:6],x0[:,7])
     SecondarySources(positions::Array,directions::Array,weights::Vector) = new(positions,directions,weights)
 end
+# constructor using the configuration
+function SecondarySources(conf::Configuration)
+    # get configuration entries
+    x0 = conf.secondarysources_x0
+    number = conf.secondarysources_number
+    geometry = conf.secondarysources_geometry
+    X0 = conf.secondarysources_center
+    L = conf.secondarysources_size
+    # check if we have pre-defined secondary sources
+    # FIXME: see, if we can do this in a better way. Maybe by passing the x0
+    # directly to any given soundfield function instead of predefining it in the
+    # configuration.
+    if ~isempty(x0)
+        SecondarySources(x0)
+        return
+    end
+    x0 = zeros(number,7);
+    if geometry=="line" || geometry=="linear"
+        # === Linear array ===
+        # Positions of the secondary sources
+        x0[:,1] = X0[1] .+ linspace(-L/2,L/2,number)
+        x0[:,2] = X0[2] .* ones(number,1)
+        x0[:,3] = X0[3] .* ones(number,1)
+        # Direction of the secondary sources pointing to the -y direction
+        x0[:,4:6] = directionvector(x0[:,1:3],x0[:,1:3]+repmat([0 -1 0],number,1))
+        # equal weights for all sources
+        x0[:,7] = ones(number,1)
+    elseif geometry=="circle" || geometry=="circular"
+        # === Circular array ===
+        # Azimuth angles
+        phi = linspace(0,(2-2/number)*pi,number) # 0..2pi
+        # Elevation angles
+        theta = zeros(number,1)
+        # Positions of the secondary sources
+        # FIXME: sph2cart is not available in julia yet
+        [cx,cy,cz] = sph2cart(phi,theta,L/2)
+        x0[:,1:3] = [cx,cy,cz] + repmat(X0,number,1)
+        # Direction of the secondary sources
+        x0[:,4:6] = directionvector(x0[:,1:3],repmat(X0,number,1).*ones(number,3));
+        # equal weights for all sources
+        x0[:,7] = ones(nls,1)
+    end
+    # construct the secondary sources
+    SecondarySources(x0)
+end
+
+
+
 
 # add normal functions to work with SecondarySources
 import Base.size
