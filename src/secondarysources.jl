@@ -108,10 +108,29 @@ function selection(x0::SecondarySources,xs::PlaneWave)
     x0[idx], idx
 end
 function selection(x0::SecondarySources,xs::PointSource)
-    # add code
-    x0, idx
+    #
+    #      / 1, if (x0-xs) nx0 > 0
+    # a = <
+    #      \ 0, else
+    #
+    # see Wierstorf (2014), p.26 (2.54) and p.27 (2.59)
+    #
+    idx = vectorproduct(x0.positions-xs.direction',x0.directions,2).>=eps()
+    # return only selected secondary sources
+    x0[idx], idx
 end
-# ...
-
+function selection(x0::SecondarySources,xs::FocusedSources)
+    # NOTE: (xs-x0) nx0 > 0 is always true for a focused source
+    #
+    #      / 1, if nxs (xs-x0) > 0
+    # a = <
+    #      \ 0, else
+    #
+    # see Wierstorf (2014), p.27 (2.67)
+    #
+    idx = vectorproduct(xs.direction',xs.position'-x0.positions,2).>=eps()
+    # return only selected secondary sources
+    x0[idx], idx
+end
 
 
