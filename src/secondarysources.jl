@@ -31,42 +31,41 @@ function SecondarySources(conf::Configuration)
         x0[:,2] = X0[2] .* ones(number,1)
         x0[:,3] = X0[3] .* ones(number,1)
         # Direction of the secondary sources pointing to the -y direction
-        x0[:,4:6] = directionvector(x0[:,1:3],x0[:,1:3]+repmat([0 -1 0],number,1))
+        x0[:,4:6] = directionvector(x0[:,1:3],x0[:,1:3].+[0,-1,0]')
         # equal weights for all sources
         x0[:,7] = ones(number,1)
     elseif geometry=="circle" || geometry=="circular"
         # === Circular array ===
         # Azimuth angles
         phi = linspace(0,(2-2/number)*pi,number) # 0..2pi
-        # Elevation angles
-        theta = zeros(number,1)
         # Positions of the secondary sources
-        # FIXME: sph2cart is not available in julia yet
-        [cx,cy,cz] = sph2cart(phi,theta,L/2)
-        x0[:,1:3] = [cx,cy,cz] + repmat(X0,number,1)
+        (x,y,z) = sph2cart(phi,0,L/2)
+        x0[:,1:3] = [x y z] .+ X0'
         # Direction of the secondary sources
-        x0[:,4:6] = directionvector(x0[:,1:3],repmat(X0,number,1).*ones(number,3));
+        x0[:,4:6] = directionvector(x0[:,1:3],X0);
         # equal weights for all sources
-        x0[:,7] = ones(nls,1)
+        x0[:,7] = ones(number)
     end
     # construct the secondary sources
     SecondarySources(x0)
 end
 
-
-
-
 # add normal functions to work with SecondarySources
 import Base.size
 import Base.length
+import Base.getindex
 size(x0::SecondarySources,dim::Integer) = size(x0.positions,1)
 size(x0::SecondarySources) = size(x0.positions,1)
 length(x0::SecondarySources) = size(x0)
+getindex(x0::SecondarySources,idx::Integer) = SecondarySources(x0.positions[idx,:],x0.directions[idx,:],[x0.weights[idx]])
+getindex(x0::SecondarySources,range::UnitRange) = SecondarySources(x0.positions[range,:],x0.directions[range,:],x0.weights[range])
+getindex(x0::SecondarySources,idx::BitVector) = SecondarySources(x0.positions[idx,:],x0.directions[idx,:],x0.weights[idx])
+
 
 # add all the functions dealing with secondary sources
 
 
-# === distance between secondary sources
+# === distance between secondary sources =================================
 function distance(x0::SecondarySources,approx::Bool)
     if size(x0)==1
         # if we have only one secondary source
@@ -95,10 +94,18 @@ end
 distance(x0::SecondarySources) = distance(x0,false)
 
 
-# === secondary source selection for WFS
+# === secondary source selection for WFS =================================
 function selection(x0::SecondarySources,xs::PlaneWave)
-    # add code
-    x0, idx
+    #
+    #      / 1, if nk nx0 > 0
+    # a = <
+    #      \ 0, else
+    #
+    # see Wierstorf (2014), p.25 (2.47)
+    #
+    idx = vectorproduct(x0.directions,xs.direction',2).>=eps()
+    # return only selected secondary sources
+    x0[idx], idx
 end
 function selection(x0::SecondarySources,xs::PointSource)
     # add code

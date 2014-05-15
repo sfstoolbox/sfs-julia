@@ -19,14 +19,14 @@ end
 # PlaneWave
 type PlaneWave <: SourceModel
     direction
-    PlaneWave(direction::Vector) = length(direction)!=3 ? error("PlaneWave has to have 3 entries") : new(direction)
+    PlaneWave(direction::Vector) = length(direction)!=3 ? error("PlaneWave has to have 3 entries") : new(direction/norm(direction))
 end
 # FocusedSource
 type FocusedSource <: SourceModel
     position
     direction
     FocusedSource(position::Vector,direction::Vector) = length(position)!=3 ? error("Position of FocusedSource has to have 3 entries") :
-        length(direction)!=3 ? error("Direction of FocusedSource has to have 3 entries") : new(position,direction)
+        length(direction)!=3 ? error("Direction of FocusedSource has to have 3 entries") : new(position,direction/norm(direction))
 end
 
 
