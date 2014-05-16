@@ -5,8 +5,9 @@ immutable SecondarySources
     directions::Array{Float64,2}
     weights::Vector{Float64}
     SecondarySources(x0::Array) = size(x0,2)!=7 ? error("SecondarySources has to have 7 columns") : new(x0[:,1:3],x0[:,4:6],x0[:,7])
-    SecondarySources(positions::Array,directions::Array,weights::Vector) = new(positions,directions,weights)
 end
+SecondarySources(positions::Array,directions::Array,weights::Vector) = new(positions,directions,weights)
+SecondarySources() = SecondarySources(Configuration())
 # constructor using the configuration
 function SecondarySources(conf::Configuration)
     # get configuration entries
@@ -51,15 +52,16 @@ function SecondarySources(conf::Configuration)
 end
 
 # add normal functions to work with SecondarySources
-import Base.size
-import Base.length
-import Base.getindex
+#import Base.size
+#import Base.length
+#import Base.getindex
 size(x0::SecondarySources,dim::Integer) = size(x0.positions,1)
 size(x0::SecondarySources) = size(x0.positions,1)
 length(x0::SecondarySources) = size(x0)
 getindex(x0::SecondarySources,idx::Integer) = SecondarySources(x0.positions[idx,:],x0.directions[idx,:],[x0.weights[idx]])
 getindex(x0::SecondarySources,range::UnitRange) = SecondarySources(x0.positions[range,:],x0.directions[range,:],x0.weights[range])
 getindex(x0::SecondarySources,idx::BitVector) = SecondarySources(x0.positions[idx,:],x0.directions[idx,:],x0.weights[idx])
++(x01::SecondarySources,x02::SecondarySources) = SecondarySources([x01.positions;x02.positions],[x01.directions;x02.directions],[x01.weights;x02.weights])
 
 
 # add all the functions dealing with secondary sources
@@ -119,7 +121,7 @@ function selection(x0::SecondarySources,xs::PointSource)
     # return only selected secondary sources
     x0[idx], idx
 end
-function selection(x0::SecondarySources,xs::FocusedSources)
+function selection(x0::SecondarySources,xs::FocusedSource)
     # NOTE: (xs-x0) nx0 > 0 is always true for a focused source
     #
     #      / 1, if nxs (xs-x0) > 0
