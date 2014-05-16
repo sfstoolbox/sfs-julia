@@ -1,14 +1,13 @@
 module SoundFieldSynthesis
 
-# import
+# Check if this will work
+import Base: size, length, getindex
 
-# is there a better way if we have a great bunch of functions?
-#export mono, imp
+export Configuration, SoundField, SecondarySources, PlaneWave, PointSource, FocusedSource, selection, distance
 
-# include tools
+include("configuration.jl")
 include("mathtools.jl")
 include("types.jl")
-# secondary sources
 include("secondarysources.jl")
 
 end # module
